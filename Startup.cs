@@ -66,7 +66,7 @@ namespace WorldCities
 
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Seed}/{action=Import}/{id?}");
+                    pattern: "{controller}/{action}/{id?}");
             });
 
             app.UseSpa(spa =>
