@@ -1,0 +1,18 @@
+<h1>Countries</h1>
+<p>Here's a list of countries: feel free to play with it.</p>
+<p *ngIf="!countries"><em>Loading...</em></p>
+
+<table [hidden]="!countries">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>ISO2</th>
+    <th>ISO3</th>
+  </tr>
+  <tr *ngFor="let country of countries">
+    <td>{{country.id}}</td>
+    <td>{{country.name}}</td>
+    <td>{{country.isO2}}</td>
+    <td>{{country.isO3}}</td>
+  </tr>
+</table>
