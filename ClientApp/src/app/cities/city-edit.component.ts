@@ -1,7 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormGroup, FormControl } from '@angular/forms';
+import { FormGroup, FormControl, Validators, AbstractControl, AsyncValidatorFn } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { City } from './City';
 import { Country } from './../countries/Country';
@@ -31,11 +33,11 @@ export class CityEditComponent implements OnInit {
 
   ngOnInit() {
     this.form = new FormGroup({
-      name: new FormControl(''),
-      lat: new FormControl(''),
-      lon: new FormControl(''),
-      countryId: new FormControl('')
-    });
+      name: new FormControl('', Validators.required),
+      lat: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]\d*/)]),
+      lon: new FormControl('', [Validators.required, Validators.pattern(/^[0-9]\d*/)]),
+      countryId: new FormControl('', Validators.required)
+    }, null, this.isDupeCity());
     this.loadData();
   }
 
@@ -100,6 +102,27 @@ export class CityEditComponent implements OnInit {
           // go back to cities view
           this.router.navigate(['/cities']);
         }, error => console.error(error));
+    }
+  }
+
+  isDupeCity(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<{ [key: string]: any } | null> => {
+      var city = <City>{};
+      city.id = (this.id) ? this.id : 0;
+      city.name = this.form.get("name").value;
+      city.lat = +this.form.get("lat").value;
+      city.lon = +this.form.get("lon").value;
+      city.countryId = +this.form.get("countryId").value;
+      var url = this.baseUrl + "api/Cities/IsDupeCity";
+      return this.http.post<boolean>(url, city).pipe(map(result => { /*We should use the subscribe() method when we want to execute the Observable and 
+        get its actual result; for example, a JSON structured response.Such a method returns
+        a Subscription that can be canceled but can't be subscribed to anymore.We should use the map() operator when we want to transform/manipulate the data
+        events of the Observable without executing it so that it can be passed to other async
+        actors that will also manipulate (and eventually execute) it. Such a method returns an
+        Observable that can be subscribed to. As for the pipe(), it's just an RxJS operator that composes/chains other operators (such as map,
+        filter, and so on).*/
+        return (result ? { isDupeCity: true } : null);
+      }));
     }
   }
 }
