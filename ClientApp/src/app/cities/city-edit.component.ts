@@ -1,5 +1,5 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+// import { HttpClient, HttpParams } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormGroup, FormControl, Validators, AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { Observable } from 'rxjs';
@@ -7,15 +7,18 @@ import { map } from 'rxjs/operators';
 
 import { City } from './City';
 import { Country } from './../countries/Country';
+import { CityService } from './city.service';
+import { ApiResult } from '../base.service';
 
 import { BaseFormComponent } from './../base.form.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-city-edit',
   templateUrl: './city-edit.component.html',
   styleUrls: ['./city-edit.component.css']
 })
-export class CityEditComponent extends BaseFormComponent implements OnInit {
+export class CityEditComponent extends BaseFormComponent implements OnInit, OnDestroy {
   title: string;
   form: FormGroup;
   city: City;
@@ -26,10 +29,13 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
   // the countries array for the select
   countries: Country[];
 
+  // Activity Log (for debugging purposes)
+  activityLog: string = '';
+  private subscriptions: Subscription = new Subscription();
+
   constructor(private activatedRoute: ActivatedRoute,
     private router: Router,
-    private http: HttpClient,
-    @Inject('BASE_URL') private baseUrl: string) {
+    private cityService: CityService) {
     super();
   }
 
@@ -40,7 +46,40 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
       lon: new FormControl('', [Validators.required, Validators.pattern(/^[-]?[0-9]+(\.[0-9]{1,4})?$/)]),
       countryId: new FormControl('', Validators.required)
     }, null, this.isDupeCity());
+
+    // react to form changes
+    this.subscriptions.add(this.form.valueChanges
+      .subscribe(() => {
+        if (!this.form.dirty) {
+          this.log("Form Model has been loaded.");
+        }
+        else {
+          this.log("Form was updated by the user.");
+        }
+      }));
+
+    // react to changes in the form.name control
+    this.subscriptions.add(this.form.get("name")!.valueChanges
+      .subscribe(() => {
+        if (!this.form.dirty) {
+          this.log("Name has been loaded with initial values.");
+        }
+        else {
+          this.log("Name was updated by the user.");
+        }
+      }));
+
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  log(str: string) {
+    this.activityLog += "[" // Ovdje smo mogli koristiti i obicni console.log sto je i bolje. Ali za sada ovako zbog nekih drugih stvari
+      + new Date().toLocaleString()
+      + "] " + str + "<br />";
   }
 
   loadData() {
@@ -51,10 +90,11 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
     if (this.id) {
       // EDIT MODE
       // fetch the city from the server
-      var url = this.baseUrl + "api/Cities/" + this.id;
-      this.http.get<City>(url).subscribe(result => {
+
+      this.cityService.get<City>(this.id).subscribe(result => {
         this.city = result;
         this.title = "Edit - " + this.city.name;
+
         // update the form with the city value
         this.form.patchValue(this.city);
       }, error => console.error(error));
@@ -67,27 +107,30 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
 
   loadCountries() {
     // fetch all the countries from the server
-    var url = this.baseUrl + "api/Countries";
-    var params = new HttpParams()
-      .set("pageIndex", "0")
-      .set("pageSize", "9999")
-      .set("sortColumn", "name");
-    this.http.get<any>(url, { params }).subscribe(result => {
-      this.countries = result.data;
-    }, error => console.error(error));
+    this.cityService.getCountries<ApiResult<Country>>(
+      0,
+      9999,
+      "name",
+      null,
+      null,
+      null)
+      .subscribe(result => {
+        this.countries = result.data
+      }, error => console.error(error));
   }
 
   onSubmit() {
     var city = (this.id) ? this.city : <City>{};
     city.name = this.form.get("name").value;
-    city.lat = +this.form.get("lat").value; //+ prefix converts value to a number in JS (and TS)
+    city.lat = +this.form.get("lat").value;
     city.lon = +this.form.get("lon").value;
+
     city.countryId = +this.form.get("countryId").value;
+
     if (this.id) {
       // EDIT mode
-      var url = this.baseUrl + "api/Cities/" + this.city.id;
-      this.http
-        .put<City>(url, city)
+      this.cityService
+        .put<City>(city)
         .subscribe(result => {
           console.log("City " + city.id + " has been updated.");
           // go back to cities view
@@ -96,9 +139,8 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
     }
     else {
       // ADD NEW mode
-      var url = this.baseUrl + "api/Cities";
-      this.http
-        .post<City>(url, city)
+      this.cityService
+        .post<City>(city)
         .subscribe(result => {
           console.log("City " + result.id + " has been created.");
           // go back to cities view
@@ -115,16 +157,16 @@ export class CityEditComponent extends BaseFormComponent implements OnInit {
       city.lat = +this.form.get("lat").value;
       city.lon = +this.form.get("lon").value;
       city.countryId = +this.form.get("countryId").value;
-      var url = this.baseUrl + "api/Cities/IsDupeCity";
-      return this.http.post<boolean>(url, city).pipe(map(result => { /*We should use the subscribe() method when we want to execute the Observable and 
+      return this.cityService.isDupeCity(city)
+        .pipe(map(result => {
+          return (result ? { isDupeCity: true } : null);
+        })); /*We should use the subscribe() method when we want to execute the Observable and 
         get its actual result; for example, a JSON structured response.Such a method returns
         a Subscription that can be canceled but can't be subscribed to anymore.We should use the map() operator when we want to transform/manipulate the data
         events of the Observable without executing it so that it can be passed to other async
         actors that will also manipulate (and eventually execute) it. Such a method returns an
         Observable that can be subscribed to. As for the pipe(), it's just an RxJS operator that composes/chains other operators (such as map,
         filter, and so on).*/
-        return (result ? { isDupeCity: true } : null);
-      }));
     }
   }
 }

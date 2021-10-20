@@ -19,6 +19,8 @@ namespace WorldCities.Controllers
         public CitiesController(ApplicationDbContext context)
         {
             _context = context;
+            Serilog.Log.Information("CitiesController initialized."); //Upisivanje obicnih logova. Takodjer moze i preko DI sa
+                                                                      //ILogger<CitiesController> logger i onda logger.LogInformation("poruka")
         }
 
         // GET: api/Cities

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorldCities", "WorldCities.csproj", "{DC82D7C6-FAC0-4B71-95DF-AB28CFD7F48A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldCities.Tests", "..\WorldCities.Tests\WorldCities.Tests.csproj", "{103448CD-B4EF-430E-A628-457BDDABB41A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC82D7C6-FAC0-4B71-95DF-AB28CFD7F48A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC82D7C6-FAC0-4B71-95DF-AB28CFD7F48A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC82D7C6-FAC0-4B71-95DF-AB28CFD7F48A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC82D7C6-FAC0-4B71-95DF-AB28CFD7F48A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{103448CD-B4EF-430E-A628-457BDDABB41A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{103448CD-B4EF-430E-A628-457BDDABB41A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{103448CD-B4EF-430E-A628-457BDDABB41A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{103448CD-B4EF-430E-A628-457BDDABB41A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D23C760A-D8A8-4625-A4EC-1DE55583E531}
+	EndGlobalSection
+EndGlobal
